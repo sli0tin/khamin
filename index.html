@@ -150,13 +150,30 @@
                     <h3 class="text-xl font-bold text-gray-800 mb-4">صورتي (لا تراها أنت):</h3>
                     <img id="player-image-display" src="" alt="My Image" class="w-64 h-64 object-cover rounded-lg shadow-lg mb-4 border-4 border-blue-500 hidden" />
                     <div id="player-image-placeholder" class="w-64 h-64 bg-gray-300 rounded-lg flex items-center justify-center text-gray-600 text-center text-sm shadow-inner mb-4">
-                        لا توجد صورة بعد. ابدأ اللعبة!
+                        لا توجد صورة بعد.
+                    </div>
+
+                    <!-- Player's Image Input Section -->
+                    <div id="player-image-input-section" class="w-full max-w-md p-4 bg-white rounded-lg shadow-md mt-4 hidden">
+                        <h4 class="text-lg font-semibold mb-2">اكتب ما تريد أن تخمنه صورتك:</h4>
+                        <input
+                            type="text"
+                            id="player-prompt-input"
+                            placeholder="مثال: قطة لطيفة، برج إيفل، طارق العلي"
+                            class="w-full p-2 mb-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <button
+                            id="set-my-image-btn"
+                            class="w-full p-3 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 font-semibold"
+                        >
+                            تحديد صورتي
+                        </button>
                     </div>
 
                     <h3 class="text-xl font-bold text-gray-800 mb-4 mt-8">صورة الخصم (خمنها!):</h3>
                     <img id="opponent-image-display" src="" alt="Opponent's Image" class="w-64 h-64 object-cover rounded-lg shadow-lg mb-4 border-4 border-green-500 hidden" />
                     <div id="opponent-image-placeholder" class="w-64 h-64 bg-gray-300 rounded-lg flex items-center justify-center text-gray-600 text-center text-sm shadow-inner mb-4">
-                        لا توجد صورة بعد. ابدأ اللعبة!
+                        صورة الخصم ستظهر هنا.
                     </div>
 
                     <div id="loading-image-indicator" class="mt-4 text-blue-600 font-semibold flex items-center hidden">
@@ -258,11 +275,23 @@
         let loadingImage = false;
         let showGuessInput = false;
         let guessText = '';
+        let playerPromptInputText = ''; // New variable for player's prompt input
 
-        // Firebase configuration and global variables (from Canvas environment)
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Firebase configuration (directly from user's provided config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBLyoIoXp2aJCnhFqIFufMVBz0fzCS-FYY",
+            authDomain: "game-303eb.firebaseapp.com",
+            databaseURL: "https://game-303eb-default-rtdb.firebaseio.com",
+            projectId: "game-303eb",
+            storageBucket: "game-303eb.firebasestorage.app",
+            messagingSenderId: "22261863844",
+            appId: "1:22261863844:web:66f8541079b9025ec69d31",
+            measurementId: "G-RKN2F3HVHS"
+        };
+        // Extract appId from the config directly
+        const appId = firebaseConfig.appId;
+        // initialAuthToken is specific to Canvas and not available on GitHub Pages
+        const initialAuthToken = null; // Ensure it's null for external deployment
 
         // Initialize Firebase App
         const app = initializeApp(firebaseConfig);
@@ -271,38 +300,9 @@
 
         // Image generation API details
         const IMAGE_GEN_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=`;
-        const IMAGE_PROMPTS = [
-            "قلم رصاص بسيط", // Simple pencil
-            "لوحة مفاتيح كمبيوتر", // Computer keyboard
-            "منزل ريفي", // Country house
-            "غيوم في سماء زرقاء", // Clouds in a blue sky
-            "شمس مشرقة", // Bright sun
-            "إبرة خياطة", // Sewing needle
-            "كوب قهوة", // Coffee cup
-            "كتاب مفتوح", // Open book
-            "كرسي خشبي", // Wooden chair
-            "شجرة خضراء", // Green tree
-            "سيارة حمراء", // Red car
-            "تفاحة خضراء", // Green apple
-            "موزة صفراء", // Yellow banana
-            "هاتف ذكي", // Smartphone
-            "ساعة يد", // Wristwatch
-            "كرة قدم", // Football
-            "جيتار صوتي", // Acoustic guitar
-            "كاميرا قديمة", // Old camera
-            "دراجة هوائية", // Bicycle
-            "قارب صغير", // Small boat
-            "جبل ثلجي", // Snowy mountain
-            "نهر هادئ", // Calm river
-            "زهرة عباد الشمس", // Sunflower
-            "فراشة ملونة", // Colorful butterfly
-            "قطة لطيفة", // Cute cat
-            "كلب ودود", // Friendly dog
-            "بومة حكيمة", // Wise owl
-            "سمكة ذهبية", // Goldfish
-            "برج إيفل", // Eiffel Tower
-            "أهرامات الجيزة" // Pyramids of Giza
-        ];
+        // No longer using a predefined list of prompts for random selection, user will input.
+        // Keeping it empty as a placeholder, or could remove entirely if not needed for any other purpose.
+        const IMAGE_PROMPTS = [];
 
         // DOM Elements
         const mainScreen = document.getElementById('main-screen');
@@ -326,6 +326,10 @@
         const opponentImageDisplay = document.getElementById('opponent-image-display');
         const opponentImagePlaceholder = document.getElementById('opponent-image-placeholder');
         const loadingImageIndicator = document.getElementById('loading-image-indicator');
+
+        const playerImageInputSection = document.getElementById('player-image-input-section'); // New
+        const playerPromptInput = document.getElementById('player-prompt-input'); // New
+        const setMyImageBtn = document.getElementById('set-my-image-btn'); // New
 
         const startGameBtn = document.getElementById('start-game-btn');
         const changeImagesBtn = document.getElementById('change-images-btn');
@@ -384,14 +388,17 @@
         // --- Firebase Authentication ---
         const initializeAuth = async () => {
             try {
-                if (initialAuthToken) {
+                // Log Firebase config to console for debugging
+                console.log("Firebase Config being used:", firebaseConfig);
+                if (initialAuthToken) { // This will be null on GitHub Pages
                     await signInWithCustomToken(auth, initialAuthToken);
                 } else {
                     await signInAnonymously(auth);
                 }
+                console.log("Firebase Auth Initialized successfully.");
             } catch (error) {
                 console.error("Error signing in:", error);
-                showMessage("حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.", "error");
+                showMessage("حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى. تأكد من تفعيل المصادقة المجهولة في Firebase Console.", "error");
             }
         };
 
@@ -423,6 +430,8 @@
                     gameStarted: false,
                     player1Image: '',
                     player2Image: '',
+                    player1Prompt: '', // Store prompt for player 1
+                    player2Prompt: '', // Store prompt for player 2
                     createdAt: new Date().toISOString(),
                 });
                 roomCode = newRoomCode;
@@ -500,63 +509,83 @@
             }
         };
 
-        const generateAndAssignImages = async () => {
+        // New function to generate a single player's image
+        const generatePlayerImage = async (playerNum, prompt) => {
             loadingImage = true;
             updateGameUI(); // Show loading indicator
             try {
-                // Select two distinct random prompts
-                const prompt1 = IMAGE_PROMPTS[Math.floor(Math.random() * IMAGE_PROMPTS.length)];
-                let prompt2 = prompt1;
-                while (prompt2 === prompt1) {
-                    prompt2 = IMAGE_PROMPTS[Math.floor(Math.random() * IMAGE_PROMPTS.length)];
-                }
-
-                // Generate images
-                const generateImage = async (prompt) => {
-                    const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
-                    const response = await fetch(IMAGE_GEN_API_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const result = await response.json();
-                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
-                        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
-                    } else {
-                        throw new Error("Failed to generate image.");
-                    }
-                };
-
-                const [img1, img2] = await Promise.all([
-                    generateImage(prompt1),
-                    generateImage(prompt2)
-                ]);
-
-                // Assign images to players
-                const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
-                await updateDoc(roomDocRef, {
-                    player1Image: img1,
-                    player2Image: img2,
-                    player1Prompt: prompt1, // Store prompt for guessing
-                    player2Prompt: prompt2, // Store prompt for guessing
-                    gameStarted: true,
+                const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
+                const response = await fetch(IMAGE_GEN_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
-                showMessage("تم إنشاء صور جديدة بنجاح!", "success");
+                const result = await response.json();
+                if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+                    if (playerNum === 1) {
+                        await updateDoc(roomDocRef, {
+                            player1Image: imageUrl,
+                            player1Prompt: prompt,
+                        });
+                    } else if (playerNum === 2) {
+                        await updateDoc(roomDocRef, {
+                            player2Image: imageUrl,
+                            player2Prompt: prompt,
+                        });
+                    }
+                    showMessage("تم إنشاء صورتك بنجاح!", "success");
+                } else {
+                    throw new Error("Failed to generate image.");
+                }
             } catch (error) {
-                console.error("Error generating or assigning images:", error);
-                showMessage("حدث خطأ أثناء إنشاء الصور. يرجى المحاولة مرة أخرى.", "error");
+                console.error("Error generating image:", error);
+                showMessage("حدث خطأ أثناء إنشاء الصورة. يرجى المحاولة مرة أخرى.", "error");
             } finally {
                 loadingImage = false;
                 updateGameUI(); // Hide loading indicator
             }
         };
 
+        const handleSetMyImage = async () => {
+            playerPromptInputText = playerPromptInput.value.trim();
+            if (!playerPromptInputText) {
+                showMessage("الرجاء إدخال وصف لصورتك.", "error");
+                return;
+            }
+            if (!roomData) {
+                showMessage("خطأ في بيانات الغرفة.", "error");
+                return;
+            }
+
+            const isPlayer1 = roomData.player1Id === userId;
+            const playerNum = isPlayer1 ? 1 : 2;
+
+            await generatePlayerImage(playerNum, playerPromptInputText);
+        };
+
+
         const handleStartGame = async () => {
             if (!roomData || !roomData.player1Id || !roomData.player2Id) {
                 showMessage("يجب أن يكون هناك لاعبان لبدء اللعبة.", "error");
                 return;
             }
-            await generateAndAssignImages();
+            if (!roomData.player1Image || !roomData.player2Image) {
+                showMessage("يجب على كلا اللاعبين تحديد صورتهما أولاً.", "error");
+                return;
+            }
+
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            try {
+                await updateDoc(roomDocRef, {
+                    gameStarted: true,
+                });
+                showMessage("بدأت اللعبة!", "success");
+            } catch (error) {
+                console.error("Error starting game:", error);
+                showMessage("حدث خطأ أثناء بدء اللعبة.", "error");
+            }
         };
 
         const handleChangeImages = async () => {
@@ -564,7 +593,21 @@
                 showMessage("يجب أن يكون هناك لاعبان لتغيير الصور.", "error");
                 return;
             }
-            await generateAndAssignImages();
+            // Reset images and prompts, set gameStarted to false to allow re-selection
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            try {
+                await updateDoc(roomDocRef, {
+                    player1Image: '',
+                    player2Image: '',
+                    player1Prompt: '',
+                    player2Prompt: '',
+                    gameStarted: false, // Allow players to set new images
+                });
+                showMessage("يمكنك الآن تغيير صورك.", "info");
+            } catch (error) {
+                console.error("Error changing images:", error);
+                showMessage("حدث خطأ أثناء تغيير الصور.", "error");
+            }
         };
 
         const handleGuess = async () => {
@@ -728,6 +771,7 @@
                 playerImagePlaceholder.classList.remove('hidden');
                 opponentImageDisplay.classList.add('hidden');
                 opponentImagePlaceholder.classList.remove('hidden');
+                playerImageInputSection.classList.add('hidden'); // Hide input section
                 startGameBtn.classList.add('hidden');
                 changeImagesBtn.classList.add('hidden');
                 guessBtn.classList.add('hidden');
@@ -750,9 +794,29 @@
             opponentScoreDisplay.textContent = opponentName ? `${opponentName}: ${otherScore} نقطة` : '';
             lastWinnerDisplay.textContent = roomData.lastWinnerName && !roomData.gameStarted ? `الفائز في الجولة الأخيرة: ${roomData.lastWinnerName}` : '';
 
-            // Update player image
-            if (playerImage) {
-                playerImageDisplay.src = playerImage;
+            // Determine current player's image and opponent's image/prompt
+            let currentPlayerImage = '';
+            let currentOpponentImage = '';
+            let currentPlayerPrompt = '';
+            let currentOpponentPrompt = '';
+
+            if (isPlayer1) {
+                currentPlayerImage = roomData.player1Image || '';
+                currentOpponentImage = roomData.player2Image || '';
+                currentPlayerPrompt = roomData.player1Prompt || '';
+                currentOpponentPrompt = roomData.player2Prompt || '';
+            } else {
+                currentPlayerImage = roomData.player2Image || '';
+                currentOpponentImage = roomData.player1Image || '';
+                currentPlayerPrompt = roomData.player2Prompt || '';
+                currentOpponentPrompt = roomData.player1Prompt || '';
+            }
+            playerImage = currentPlayerImage; // Update global playerImage for consistency
+            opponentImage = currentOpponentImage; // Update global opponentImage for consistency
+
+            // Update player image display
+            if (currentPlayerImage) {
+                playerImageDisplay.src = currentPlayerImage;
                 playerImageDisplay.classList.remove('hidden');
                 playerImagePlaceholder.classList.add('hidden');
             } else {
@@ -760,9 +824,9 @@
                 playerImagePlaceholder.classList.remove('hidden');
             }
 
-            // Update opponent image
-            if (opponentImage) {
-                opponentImageDisplay.src = opponentImage;
+            // Update opponent image display
+            if (currentOpponentImage) {
+                opponentImageDisplay.src = currentOpponentImage;
                 opponentImageDisplay.classList.remove('hidden');
                 opponentImagePlaceholder.classList.add('hidden');
             } else {
@@ -770,12 +834,24 @@
                 opponentImagePlaceholder.classList.remove('hidden');
             }
 
-            // Game control buttons visibility
+            // Show/hide player image input section
             const bothPlayersPresent = roomData.player1Id && roomData.player2Id;
-            startGameBtn.classList.toggle('hidden', roomData.gameStarted || !bothPlayersPresent);
-            changeImagesBtn.classList.toggle('hidden', !roomData.gameStarted);
+            const playerHasImage = isPlayer1 ? roomData.player1Image : roomData.player2Image;
+
+            if (bothPlayersPresent && !roomData.gameStarted && !playerHasImage) {
+                playerImageInputSection.classList.remove('hidden');
+                playerPromptInput.value = currentPlayerPrompt; // Pre-fill if exists
+            } else {
+                playerImageInputSection.classList.add('hidden');
+            }
+
+            // Game control buttons visibility
+            const allImagesSet = roomData.player1Image && roomData.player2Image;
+            startGameBtn.classList.toggle('hidden', roomData.gameStarted || !bothPlayersPresent || !allImagesSet);
+            changeImagesBtn.classList.toggle('hidden', !bothPlayersPresent || !allImagesSet || roomData.gameStarted); // Show if both present and images set, but game not started
             guessBtn.classList.toggle('hidden', !roomData.gameStarted);
             endGameBtn.classList.toggle('hidden', !roomData.gameStarted);
+
 
             // Guess input visibility
             guessInputContainer.classList.toggle('hidden', !showGuessInput);
@@ -832,14 +908,6 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     roomData = data;
-                    // Assign images based on player ID
-                    if (data.player1Id === userId) {
-                        playerImage = data.player1Image || '';
-                        opponentImage = data.player2Image || '';
-                    } else if (data.player2Id === userId) {
-                        playerImage = data.player2Image || '';
-                        opponentImage = data.player1Image || '';
-                    }
                     updateGameUI();
                 } else {
                     roomData = null;
@@ -866,19 +934,23 @@
 
         // --- Initial Setup and Event Listeners ---
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('DOM Content Loaded. Initializing Firebase...');
             await initializeAuth(); // Ensure auth is ready first
             onAuthStateChanged(auth, (currentUser) => {
                 userId = currentUser?.uid || crypto.randomUUID();
+                console.log('Auth state changed. User ID:', userId);
                 updateMainUI(); // Update UI once userId is set
             });
 
             // Main screen buttons
             document.getElementById('create-room-btn-main').addEventListener('click', () => {
+                console.log('Create Room button clicked (Main Screen)');
                 playerName = mainPlayerNameInput.value.trim();
                 showScreen('create-room-screen');
                 updateCreateRoomUI();
             });
             document.getElementById('join-room-btn-main').addEventListener('click', () => {
+                console.log('Join Room button clicked (Main Screen)');
                 playerName = mainPlayerNameInput.value.trim();
                 showScreen('join-room-screen');
                 updateJoinRoomUI();
@@ -899,6 +971,7 @@
             });
 
             // Game room buttons
+            setMyImageBtn.addEventListener('click', handleSetMyImage); // New event listener
             startGameBtn.addEventListener('click', handleStartGame);
             changeImagesBtn.addEventListener('click', handleChangeImages);
             guessBtn.addEventListener('click', () => {
@@ -909,6 +982,9 @@
             leaveRoomBtn.addEventListener('click', handleLeaveRoom);
 
             // Guess input actions
+            guessTextInput.addEventListener('input', (e) => {
+                guessText = e.target.value;
+            });
             confirmGuessBtn.addEventListener('click', handleGuess);
             cancelGuessBtn.addEventListener('click', () => {
                 showGuessInput = false;
