@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة تخمين الصور</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .text-shadow-lg {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .text-shadow-md {
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        /* Hide screens by default */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: flex; /* or block, depending on layout */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gray-900">
+    <div id="app-container" class="w-full h-[90vh] max-w-6xl bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
+
+        <!-- Main Screen -->
+        <div id="main-screen" class="screen active flex-col items-center justify-center h-full p-4 bg-gradient-to-br from-blue-400 to-purple-600 rounded-lg shadow-xl">
+            <h1 class="text-4xl font-extrabold text-white mb-8 text-shadow-lg">لعبة تخمين الصور</h1>
+            <p class="text-lg text-white mb-8 text-center">العب مع أصدقائك وخمنوا الصور!</p>
+            <input
+                type="text"
+                id="main-player-name-input"
+                placeholder="أدخل اسمك"
+                class="w-full max-w-md p-3 mb-4 text-lg text-gray-800 bg-white rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300 ease-in-out"
+            />
+            <button
+                id="create-room-btn-main"
+                class="w-full max-w-md p-4 mb-4 text-xl font-bold text-white bg-green-500 rounded-lg shadow-lg hover:bg-green-600 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-700"
+            >
+                إنشاء غرفة
+            </button>
+            <button
+                id="join-room-btn-main"
+                class="w-full max-w-md p-4 text-xl font-bold text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-600 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-700"
+            >
+                الدخول على غرفة موجودة
+            </button>
+            <p id="user-id-display" class="text-sm text-white mt-4 opacity-75"></p>
+        </div>
+
+        <!-- Create Room Screen -->
+        <div id="create-room-screen" class="screen flex-col items-center justify-center h-full p-4 bg-gradient-to-br from-green-400 to-teal-600 rounded-lg shadow-xl">
+            <h2 class="text-3xl font-bold text-white mb-6 text-shadow-md">إنشاء غرفة جديدة</h2>
+            <p class="text-lg text-white mb-8 text-center">سيتم إنشاء غرفة جديدة لك ومشاركتك رمزها.</p>
+            <input
+                type="text"
+                id="create-room-player-name-input"
+                placeholder="أدخل اسمك"
+                class="w-full max-w-md p-3 mb-4 text-lg text-gray-800 bg-white rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-teal-500 transition duration-300 ease-in-out"
+            />
+            <button
+                id="create-room-action-btn"
+                class="w-full max-w-md p-4 mb-4 text-xl font-bold text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-600 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-700"
+            >
+                إنشاء الغرفة
+            </button>
+            <button
+                id="back-to-main-btn-create"
+                class="w-full max-w-md p-3 text-lg font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-700"
+            >
+                العودة
+            </button>
+        </div>
+
+        <!-- Join Room Screen -->
+        <div id="join-room-screen" class="screen flex-col items-center justify-center h-full p-4 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-lg shadow-xl">
+            <h2 class="text-3xl font-bold text-white mb-6 text-shadow-md">الدخول على غرفة موجودة</h2>
+            <p class="text-lg text-white mb-8 text-center">أدخل رمز الغرفة واسمك للانضمام.</p>
+            <input
+                type="text"
+                id="join-room-code-input"
+                placeholder="رمز الغرفة"
+                class="w-full max-w-md p-3 mb-4 text-lg text-gray-800 bg-white rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out"
+            />
+            <input
+                type="text"
+                id="join-room-player-name-input"
+                placeholder="أدخل اسمك"
+                class="w-full max-w-md p-3 mb-4 text-lg text-gray-800 bg-white rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300 ease-in-out"
+            />
+            <button
+                id="join-room-action-btn"
+                class="w-full max-w-md p-4 mb-4 text-xl font-bold text-white bg-green-500 rounded-lg shadow-lg hover:bg-green-600 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-700"
+            >
+                الدخول إلى الغرفة
+            </button>
+            <button
+                id="back-to-main-btn-join"
+                class="w-full max-w-md p-3 text-lg font-semibold text-white bg-gray-500 rounded-lg shadow-md hover:bg-gray-600 transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-700"
+            >
+                العودة
+            </button>
+        </div>
+
+        <!-- Game Room Screen -->
+        <div id="game-room-screen" class="screen flex-col h-full bg-gray-100 rounded-lg shadow-xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-4 flex justify-between items-center shadow-md">
+                <h2 id="room-code-display" class="text-2xl font-bold">الغرفة:</h2>
+                <div class="flex items-center space-x-4">
+                    <span id="player-score-display" class="text-lg font-semibold"></span>
+                    <span id="opponent-score-display" class="text-lg font-semibold"></span>
+                    <span id="last-winner-display" class="text-lg font-semibold text-yellow-300"></span>
+                    <button
+                        id="leave-room-btn"
+                        class="p-2 bg-red-500 rounded-lg hover:bg-red-600 transition duration-300 ease-in-out text-sm font-semibold"
+                    >
+                        مغادرة الغرفة
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Area and Chat -->
+            <div class="flex flex-1 overflow-hidden">
+                <!-- Game Section (Images) -->
+                <div class="w-1/2 p-4 flex flex-col items-center justify-center bg-gray-200 border-r border-gray-300">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">صورتي (لا تراها أنت):</h3>
+                    <img id="player-image-display" src="" alt="My Image" class="w-64 h-64 object-cover rounded-lg shadow-lg mb-4 border-4 border-blue-500 hidden" />
+                    <div id="player-image-placeholder" class="w-64 h-64 bg-gray-300 rounded-lg flex items-center justify-center text-gray-600 text-center text-sm shadow-inner mb-4">
+                        لا توجد صورة بعد. ابدأ اللعبة!
+                    </div>
+
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 mt-8">صورة الخصم (خمنها!):</h3>
+                    <img id="opponent-image-display" src="" alt="Opponent's Image" class="w-64 h-64 object-cover rounded-lg shadow-lg mb-4 border-4 border-green-500 hidden" />
+                    <div id="opponent-image-placeholder" class="w-64 h-64 bg-gray-300 rounded-lg flex items-center justify-center text-gray-600 text-center text-sm shadow-inner mb-4">
+                        لا توجد صورة بعد. ابدأ اللعبة!
+                    </div>
+
+                    <div id="loading-image-indicator" class="mt-4 text-blue-600 font-semibold flex items-center hidden">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        جاري إنشاء الصور...
+                    </div>
+
+                    <div class="flex flex-wrap justify-center gap-4 mt-6">
+                        <button id="start-game-btn" class="p-3 bg-purple-500 text-white rounded-lg shadow-md hover:bg-purple-600 transform hover:scale-105 transition duration-300 ease-in-out font-bold hidden">
+                            بدء اللعبة
+                        </button>
+                        <button id="change-images-btn" class="p-3 bg-yellow-500 text-white rounded-lg shadow-md hover:bg-yellow-600 transform hover:scale-105 transition duration-300 ease-in-out font-bold hidden">
+                            تغيير الصور
+                        </button>
+                        <button id="guess-btn" class="p-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600 transform hover:scale-105 transition duration-300 ease-in-out font-bold hidden">
+                            أنا أخمن!
+                        </button>
+                        <button id="end-game-btn" class="p-3 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transform hover:scale-105 transition duration-300 ease-in-out font-bold hidden">
+                            إنهاء اللعبة
+                        </button>
+                    </div>
+
+                    <div id="guess-input-container" class="mt-6 p-4 bg-white rounded-lg shadow-md w-full max-w-md hidden">
+                        <h4 class="text-lg font-semibold mb-2">ما هو تخمينك لصورة الخصم؟</h4>
+                        <input
+                            type="text"
+                            id="guess-text-input"
+                            placeholder="اكتب تخمينك هنا"
+                            class="w-full p-2 mb-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        />
+                        <div class="flex justify-end space-x-2">
+                            <button
+                                id="confirm-guess-btn"
+                                class="p-2 bg-green-500 text-white rounded-md hover:bg-green-600 font-semibold"
+                            >
+                                تأكيد التخمين
+                            </button>
+                            <button
+                                id="cancel-guess-btn"
+                                class="p-2 bg-gray-400 text-white rounded-md hover:bg-gray-500 font-semibold"
+                            >
+                                إلغاء
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Section -->
+                <div class="w-1/2 flex flex-col bg-white">
+                    <div id="messages-container" class="flex-1 p-4 overflow-y-auto custom-scrollbar">
+                        <!-- Messages will be appended here by JavaScript -->
+                    </div>
+
+                    <!-- Message Input -->
+                    <form id="message-form" class="p-4 border-t border-gray-300 bg-gray-50">
+                        <div class="flex items-center">
+                            <input
+                                type="text"
+                                id="new-message-input"
+                                placeholder="اكتب رسالتك..."
+                                class="flex-1 p-3 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-800"
+                            />
+                            <button
+                                type="submit"
+                                id="send-message-btn"
+                                class="p-3 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 transition duration-300 ease-in-out font-bold shadow-md"
+                            >
+                                إرسال
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box" class="fixed bottom-4 right-4 p-4 rounded-lg shadow-lg text-white font-semibold z-50 hidden">
+        <span id="message-box-text"></span>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, onSnapshot, collection, query, orderBy, limit, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global state variables
+        let userId = null;
+        let playerName = '';
+        let roomCode = '';
+        let roomData = null;
+        let messages = [];
+        let playerImage = '';
+        let opponentImage = '';
+        let loadingImage = false;
+        let showGuessInput = false;
+        let guessText = '';
+
+        // Firebase configuration and global variables (from Canvas environment)
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase App
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Image generation API details
+        const IMAGE_GEN_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=`;
+        const IMAGE_PROMPTS = [
+            "قلم رصاص بسيط", // Simple pencil
+            "لوحة مفاتيح كمبيوتر", // Computer keyboard
+            "منزل ريفي", // Country house
+            "غيوم في سماء زرقاء", // Clouds in a blue sky
+            "شمس مشرقة", // Bright sun
+            "إبرة خياطة", // Sewing needle
+            "كوب قهوة", // Coffee cup
+            "كتاب مفتوح", // Open book
+            "كرسي خشبي", // Wooden chair
+            "شجرة خضراء", // Green tree
+            "سيارة حمراء", // Red car
+            "تفاحة خضراء", // Green apple
+            "موزة صفراء", // Yellow banana
+            "هاتف ذكي", // Smartphone
+            "ساعة يد", // Wristwatch
+            "كرة قدم", // Football
+            "جيتار صوتي", // Acoustic guitar
+            "كاميرا قديمة", // Old camera
+            "دراجة هوائية", // Bicycle
+            "قارب صغير", // Small boat
+            "جبل ثلجي", // Snowy mountain
+            "نهر هادئ", // Calm river
+            "زهرة عباد الشمس", // Sunflower
+            "فراشة ملونة", // Colorful butterfly
+            "قطة لطيفة", // Cute cat
+            "كلب ودود", // Friendly dog
+            "بومة حكيمة", // Wise owl
+            "سمكة ذهبية", // Goldfish
+            "برج إيفل", // Eiffel Tower
+            "أهرامات الجيزة" // Pyramids of Giza
+        ];
+
+        // DOM Elements
+        const mainScreen = document.getElementById('main-screen');
+        const createRoomScreen = document.getElementById('create-room-screen');
+        const joinRoomScreen = document.getElementById('join-room-screen');
+        const gameRoomScreen = document.getElementById('game-room-screen');
+
+        const mainPlayerNameInput = document.getElementById('main-player-name-input');
+        const createRoomPlayerNameInput = document.getElementById('create-room-player-name-input');
+        const joinRoomCodeInput = document.getElementById('join-room-code-input');
+        const joinRoomPlayerNameInput = document.getElementById('join-room-player-name-input');
+
+        const userIdDisplay = document.getElementById('user-id-display');
+        const roomCodeDisplay = document.getElementById('room-code-display');
+        const playerScoreDisplay = document.getElementById('player-score-display');
+        const opponentScoreDisplay = document.getElementById('opponent-score-display');
+        const lastWinnerDisplay = document.getElementById('last-winner-display');
+
+        const playerImageDisplay = document.getElementById('player-image-display');
+        const playerImagePlaceholder = document.getElementById('player-image-placeholder');
+        const opponentImageDisplay = document.getElementById('opponent-image-display');
+        const opponentImagePlaceholder = document.getElementById('opponent-image-placeholder');
+        const loadingImageIndicator = document.getElementById('loading-image-indicator');
+
+        const startGameBtn = document.getElementById('start-game-btn');
+        const changeImagesBtn = document.getElementById('change-images-btn');
+        const guessBtn = document.getElementById('guess-btn');
+        const endGameBtn = document.getElementById('end-game-btn');
+        const leaveRoomBtn = document.getElementById('leave-room-btn');
+
+        const guessInputContainer = document.getElementById('guess-input-container');
+        const guessTextInput = document.getElementById('guess-text-input');
+        const confirmGuessBtn = document.getElementById('confirm-guess-btn');
+        const cancelGuessBtn = document.getElementById('cancel-guess-btn');
+
+        const messagesContainer = document.getElementById('messages-container');
+        const newMessageInput = document.getElementById('new-message-input');
+        const messageForm = document.getElementById('message-form');
+
+        const messageBox = document.getElementById('message-box');
+        const messageBoxText = document.getElementById('message-box-text');
+
+        // --- Utility Functions ---
+
+        // Scroll to bottom of messages
+        const scrollToBottom = () => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+
+        // Show message box
+        const showMessage = (msg, type) => {
+            messageBoxText.textContent = msg;
+            messageBox.classList.remove('hidden', 'bg-green-500', 'bg-red-500', 'bg-blue-500');
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-500');
+            } else {
+                messageBox.classList.add('bg-blue-500');
+            }
+            messageBox.classList.remove('hidden');
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000); // Hide after 3 seconds
+        };
+
+        // Generate a random room code
+        const generateRoomCode = () => {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
+        };
+
+        // --- Screen Management ---
+        const showScreen = (screenId) => {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        };
+
+        // --- Firebase Authentication ---
+        const initializeAuth = async () => {
+            try {
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Error signing in:", error);
+                showMessage("حدث خطأ أثناء تسجيل الدخول. يرجى المحاولة مرة أخرى.", "error");
+            }
+        };
+
+        // --- Event Handlers ---
+
+        const handleCreateRoom = async () => {
+            playerName = createRoomPlayerNameInput.value.trim();
+            if (!playerName) {
+                showMessage("الرجاء إدخال اسمك.", "error");
+                return;
+            }
+            if (!userId) {
+                showMessage("لم يتم تهيئة المستخدم بعد. يرجى المحاولة مرة أخرى.", "error");
+                return;
+            }
+
+            const newRoomCode = generateRoomCode();
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, newRoomCode);
+
+            try {
+                await setDoc(roomDocRef, {
+                    roomCode: newRoomCode,
+                    player1Id: userId,
+                    player1Name: playerName,
+                    player1Score: 0,
+                    player2Id: null,
+                    player2Name: null,
+                    player2Score: 0,
+                    gameStarted: false,
+                    player1Image: '',
+                    player2Image: '',
+                    createdAt: new Date().toISOString(),
+                });
+                roomCode = newRoomCode;
+                showScreen('game-room-screen');
+                showMessage(`تم إنشاء الغرفة بنجاح! رمز الغرفة: ${newRoomCode}`, "success");
+                setupRoomListeners(); // Start listening to room data
+            } catch (error) {
+                console.error("Error creating room:", error);
+                showMessage("حدث خطأ أثناء إنشاء الغرفة. يرجى المحاولة مرة أخرى.", "error");
+            }
+        };
+
+        const handleJoinRoom = async () => {
+            roomCode = joinRoomCodeInput.value.trim();
+            playerName = joinRoomPlayerNameInput.value.trim();
+            if (!roomCode || !playerName) {
+                showMessage("الرجاء إدخال رمز الغرفة واسمك.", "error");
+                return;
+            }
+            if (!userId) {
+                showMessage("لم يتم تهيئة المستخدم بعد. يرجى المحاولة مرة أخرى.", "error");
+                return;
+            }
+
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            try {
+                const docSnap = await getDoc(roomDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.player1Id && data.player2Id) {
+                        showMessage("الغرفة ممتلئة بالفعل.", "error");
+                        return;
+                    }
+                    if (data.player1Id === userId) {
+                        showMessage("أنت بالفعل في هذه الغرفة كلاعب 1.", "info");
+                        showScreen('game-room-screen');
+                        setupRoomListeners(); // Start listening to room data
+                        return;
+                    }
+
+                    // Add player 2
+                    await updateDoc(roomDocRef, {
+                        player2Id: userId,
+                        player2Name: playerName,
+                    });
+                    showScreen('game-room-screen');
+                    showMessage("تم الانضمام إلى الغرفة بنجاح!", "success");
+                    setupRoomListeners(); // Start listening to room data
+                } else {
+                    showMessage("رمز الغرفة غير صحيح أو الغرفة غير موجودة.", "error");
+                }
+            } catch (error) {
+                console.error("Error joining room:", error);
+                showMessage("حدث خطأ أثناء الانضمام إلى الغرفة. يرجى المحاولة مرة أخرى.", "error");
+            }
+        };
+
+        const handleSendMessage = async (e) => {
+            e.preventDefault();
+            const messageText = newMessageInput.value.trim();
+            if (!messageText || !roomCode || !userId || !playerName) return;
+
+            const messagesColRef = collection(db, `artifacts/${appId}/public/data/rooms`, roomCode, 'messages');
+            try {
+                await addDoc(messagesColRef, {
+                    senderId: userId,
+                    senderName: playerName,
+                    text: messageText,
+                    timestamp: Date.now(),
+                });
+                newMessageInput.value = ''; // Clear input
+            } catch (error) {
+                console.error("Error sending message:", error);
+                showMessage("حدث خطأ أثناء إرسال الرسالة.", "error");
+            }
+        };
+
+        const generateAndAssignImages = async () => {
+            loadingImage = true;
+            updateGameUI(); // Show loading indicator
+            try {
+                // Select two distinct random prompts
+                const prompt1 = IMAGE_PROMPTS[Math.floor(Math.random() * IMAGE_PROMPTS.length)];
+                let prompt2 = prompt1;
+                while (prompt2 === prompt1) {
+                    prompt2 = IMAGE_PROMPTS[Math.floor(Math.random() * IMAGE_PROMPTS.length)];
+                }
+
+                // Generate images
+                const generateImage = async (prompt) => {
+                    const payload = { instances: { prompt: prompt }, parameters: { "sampleCount": 1 } };
+                    const response = await fetch(IMAGE_GEN_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json();
+                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                        return `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    } else {
+                        throw new Error("Failed to generate image.");
+                    }
+                };
+
+                const [img1, img2] = await Promise.all([
+                    generateImage(prompt1),
+                    generateImage(prompt2)
+                ]);
+
+                // Assign images to players
+                const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+                await updateDoc(roomDocRef, {
+                    player1Image: img1,
+                    player2Image: img2,
+                    player1Prompt: prompt1, // Store prompt for guessing
+                    player2Prompt: prompt2, // Store prompt for guessing
+                    gameStarted: true,
+                });
+                showMessage("تم إنشاء صور جديدة بنجاح!", "success");
+            } catch (error) {
+                console.error("Error generating or assigning images:", error);
+                showMessage("حدث خطأ أثناء إنشاء الصور. يرجى المحاولة مرة أخرى.", "error");
+            } finally {
+                loadingImage = false;
+                updateGameUI(); // Hide loading indicator
+            }
+        };
+
+        const handleStartGame = async () => {
+            if (!roomData || !roomData.player1Id || !roomData.player2Id) {
+                showMessage("يجب أن يكون هناك لاعبان لبدء اللعبة.", "error");
+                return;
+            }
+            await generateAndAssignImages();
+        };
+
+        const handleChangeImages = async () => {
+            if (!roomData || !roomData.player1Id || !roomData.player2Id) {
+                showMessage("يجب أن يكون هناك لاعبان لتغيير الصور.", "error");
+                return;
+            }
+            await generateAndAssignImages();
+        };
+
+        const handleGuess = async () => {
+            guessText = guessTextInput.value.trim();
+            if (!guessText) {
+                showMessage("الرجاء إدخال تخمينك.", "error");
+                return;
+            }
+
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            let opponentPrompt = '';
+            let currentPlayerScoreField = '';
+
+            const isPlayer1 = roomData.player1Id === userId;
+            if (isPlayer1) {
+                opponentPrompt = roomData.player2Prompt;
+                currentPlayerScoreField = 'player1Score';
+            } else {
+                opponentPrompt = roomData.player1Prompt;
+                currentPlayerScoreField = 'player2Score';
+            }
+
+            // Simple check: if the guess text contains the opponent's prompt text (case-insensitive)
+            const isCorrect = opponentPrompt && guessText.toLowerCase().includes(opponentPrompt.toLowerCase());
+
+            if (isCorrect) {
+                const currentScore = roomData[currentPlayerScoreField] || 0;
+                await updateDoc(roomDocRef, {
+                    [currentPlayerScoreField]: currentScore + 1,
+                    gameStarted: false, // End the round
+                    lastWinnerId: userId, // Store winner for display
+                    lastWinnerName: playerName,
+                });
+                showMessage("تخمين صحيح! لقد ربحت هذه الجولة.", "success");
+                showGuessInput = false;
+                guessTextInput.value = '';
+                updateGameUI();
+            } else {
+                showMessage("تخمين خاطئ. حاول مرة أخرى!", "error");
+            }
+        };
+
+        const handleEndGame = async () => {
+            if (!roomData) return;
+
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            try {
+                await updateDoc(roomDocRef, {
+                    gameStarted: false,
+                    player1Image: '',
+                    player2Image: '',
+                    player1Prompt: '',
+                    player2Prompt: '',
+                });
+                showMessage("تم إنهاء اللعبة. يمكنك بدء جولة جديدة أو مغادرة الغرفة.", "info");
+                showGuessInput = false;
+                guessTextInput.value = '';
+                updateGameUI();
+            } catch (error) {
+                console.error("Error ending game:", error);
+                showMessage("حدث خطأ أثناء إنهاء اللعبة.", "error");
+            }
+        };
+
+        const handleLeaveRoom = async () => {
+            if (!roomCode || !userId) {
+                roomCode = '';
+                roomData = null;
+                messages = [];
+                playerImage = '';
+                opponentImage = '';
+                playerName = '';
+                showScreen('main-screen');
+                updateMainUI();
+                return;
+            }
+
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            try {
+                const docSnap = await getDoc(roomDocRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.player1Id === userId) {
+                        // If player 1 leaves, promote player 2 to player 1
+                        await updateDoc(roomDocRef, {
+                            player1Id: data.player2Id || null,
+                            player1Name: data.player2Name || null,
+                            player1Score: data.player2Score || 0,
+                            player1Image: data.player2Image || '',
+                            player1Prompt: data.player2Prompt || '',
+                            player2Id: null,
+                            player2Name: null,
+                            player2Score: 0,
+                            player2Image: '',
+                            player2Prompt: '',
+                            gameStarted: false,
+                        });
+                        // If player 2 also leaves (or was never there), delete the room
+                        if (!data.player2Id) {
+                            await deleteDoc(roomDocRef);
+                        }
+                    } else if (data.player2Id === userId) {
+                        // If player 2 leaves, clear player 2 data
+                        await updateDoc(roomDocRef, {
+                            player2Id: null,
+                            player2Name: null,
+                            player2Score: 0,
+                            player2Image: '',
+                            player2Prompt: '',
+                            gameStarted: false,
+                        });
+                    }
+                    // Delete all messages in the subcollection
+                    const messagesColRef = collection(db, `artifacts/${appId}/public/data/rooms`, roomCode, 'messages');
+                    const q = query(messagesColRef);
+                    const snapshot = await getDocs(q);
+                    const deletePromises = [];
+                    snapshot.forEach((doc) => {
+                        deletePromises.push(deleteDoc(doc.ref));
+                    });
+                    await Promise.all(deletePromises);
+                }
+            } catch (error) {
+                console.error("Error leaving room:", error);
+                showMessage("حدث خطأ أثناء مغادرة الغرفة.", "error");
+            } finally {
+                roomCode = '';
+                roomData = null;
+                messages = [];
+                playerImage = '';
+                opponentImage = '';
+                playerName = '';
+                showScreen('main-screen');
+                updateMainUI();
+            }
+        };
+
+        // --- UI Update Functions ---
+
+        const updateMainUI = () => {
+            mainPlayerNameInput.value = playerName;
+            userIdDisplay.textContent = userId ? `معرف المستخدم الخاص بك: ${userId}` : '';
+        };
+
+        const updateCreateRoomUI = () => {
+            createRoomPlayerNameInput.value = playerName;
+        };
+
+        const updateJoinRoomUI = () => {
+            joinRoomCodeInput.value = roomCode;
+            joinRoomPlayerNameInput.value = playerName;
+        };
+
+        const updateGameUI = () => {
+            if (!roomData) {
+                roomCodeDisplay.textContent = 'الغرفة:';
+                playerScoreDisplay.textContent = '';
+                opponentScoreDisplay.textContent = '';
+                lastWinnerDisplay.textContent = '';
+                playerImageDisplay.classList.add('hidden');
+                playerImagePlaceholder.classList.remove('hidden');
+                opponentImageDisplay.classList.add('hidden');
+                opponentImagePlaceholder.classList.remove('hidden');
+                startGameBtn.classList.add('hidden');
+                changeImagesBtn.classList.add('hidden');
+                guessBtn.classList.add('hidden');
+                endGameBtn.classList.add('hidden');
+                guessInputContainer.classList.add('hidden');
+                loadingImageIndicator.classList.add('hidden');
+                messagesContainer.innerHTML = '';
+                return;
+            }
+
+            const isPlayer1 = roomData.player1Id === userId;
+            const opponentName = isPlayer1 ? roomData.player2Name : roomData.player1Name;
+            const player1Score = roomData.player1Score || 0;
+            const player2Score = roomData.player2Score || 0;
+            const myScore = isPlayer1 ? player1Score : player2Score;
+            const otherScore = isPlayer1 ? player2Score : player1Score;
+
+            roomCodeDisplay.textContent = `الغرفة: ${roomCode}`;
+            playerScoreDisplay.textContent = `${playerName}: ${myScore} نقطة`;
+            opponentScoreDisplay.textContent = opponentName ? `${opponentName}: ${otherScore} نقطة` : '';
+            lastWinnerDisplay.textContent = roomData.lastWinnerName && !roomData.gameStarted ? `الفائز في الجولة الأخيرة: ${roomData.lastWinnerName}` : '';
+
+            // Update player image
+            if (playerImage) {
+                playerImageDisplay.src = playerImage;
+                playerImageDisplay.classList.remove('hidden');
+                playerImagePlaceholder.classList.add('hidden');
+            } else {
+                playerImageDisplay.classList.add('hidden');
+                playerImagePlaceholder.classList.remove('hidden');
+            }
+
+            // Update opponent image
+            if (opponentImage) {
+                opponentImageDisplay.src = opponentImage;
+                opponentImageDisplay.classList.remove('hidden');
+                opponentImagePlaceholder.classList.add('hidden');
+            } else {
+                opponentImageDisplay.classList.add('hidden');
+                opponentImagePlaceholder.classList.remove('hidden');
+            }
+
+            // Game control buttons visibility
+            const bothPlayersPresent = roomData.player1Id && roomData.player2Id;
+            startGameBtn.classList.toggle('hidden', roomData.gameStarted || !bothPlayersPresent);
+            changeImagesBtn.classList.toggle('hidden', !roomData.gameStarted);
+            guessBtn.classList.toggle('hidden', !roomData.gameStarted);
+            endGameBtn.classList.toggle('hidden', !roomData.gameStarted);
+
+            // Guess input visibility
+            guessInputContainer.classList.toggle('hidden', !showGuessInput);
+
+            // Loading indicator visibility
+            loadingImageIndicator.classList.toggle('hidden', !loadingImage);
+
+            // Update messages
+            messagesContainer.innerHTML = ''; // Clear existing messages
+            messages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `flex mb-3 ${msg.senderId === userId ? 'justify-end' : 'justify-start'}`;
+
+                const messageContentDiv = document.createElement('div');
+                messageContentDiv.className = `max-w-[70%] p-3 rounded-lg shadow-sm ${
+                    msg.senderId === userId
+                        ? 'bg-blue-500 text-white rounded-br-none'
+                        : 'bg-gray-200 text-gray-800 rounded-bl-none'
+                }`;
+
+                const senderNameDiv = document.createElement('div');
+                senderNameDiv.className = 'font-semibold text-sm mb-1';
+                senderNameDiv.textContent = msg.senderId === userId ? 'أنت' : msg.senderName;
+
+                const textDiv = document.createElement('div');
+                textDiv.textContent = msg.text;
+
+                const timestampDiv = document.createElement('div');
+                timestampDiv.className = 'text-xs opacity-75 mt-1';
+                timestampDiv.textContent = new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+                messageContentDiv.appendChild(senderNameDiv);
+                messageContentDiv.appendChild(textDiv);
+                messageContentDiv.appendChild(timestampDiv);
+                messageDiv.appendChild(messageContentDiv);
+                messagesContainer.appendChild(messageDiv);
+            });
+            scrollToBottom();
+        };
+
+        // --- Firebase Listeners Setup ---
+        let unsubscribeRoom = null;
+        let unsubscribeMessages = null;
+
+        const setupRoomListeners = () => {
+            // Unsubscribe previous listeners if they exist
+            if (unsubscribeRoom) unsubscribeRoom();
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            if (!roomCode || !userId) return;
+
+            const roomDocRef = doc(db, `artifacts/${appId}/public/data/rooms`, roomCode);
+            unsubscribeRoom = onSnapshot(roomDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    roomData = data;
+                    // Assign images based on player ID
+                    if (data.player1Id === userId) {
+                        playerImage = data.player1Image || '';
+                        opponentImage = data.player2Image || '';
+                    } else if (data.player2Id === userId) {
+                        playerImage = data.player2Image || '';
+                        opponentImage = data.player1Image || '';
+                    }
+                    updateGameUI();
+                } else {
+                    roomData = null;
+                    showMessage("الغرفة غير موجودة أو تم حذفها.", "error");
+                    showScreen('main-screen');
+                    updateMainUI();
+                }
+            }, (error) => {
+                console.error("Error listening to room data:", error);
+                showMessage("حدث خطأ أثناء تحميل بيانات الغرفة.", "error");
+            });
+
+            const messagesColRef = collection(db, `artifacts/${appId}/public/data/rooms`, roomCode, 'messages');
+            const q = query(messagesColRef, orderBy('timestamp', 'asc'), limit(100)); // Limit messages for performance
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                messages = [];
+                snapshot.forEach(doc => messages.push(doc.data()));
+                updateGameUI(); // Update UI to show new messages
+            }, (error) => {
+                console.error("Error listening to messages:", error);
+                showMessage("حدث خطأ أثناء تحميل الرسائل.", "error");
+            });
+        };
+
+        // --- Initial Setup and Event Listeners ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeAuth(); // Ensure auth is ready first
+            onAuthStateChanged(auth, (currentUser) => {
+                userId = currentUser?.uid || crypto.randomUUID();
+                updateMainUI(); // Update UI once userId is set
+            });
+
+            // Main screen buttons
+            document.getElementById('create-room-btn-main').addEventListener('click', () => {
+                playerName = mainPlayerNameInput.value.trim();
+                showScreen('create-room-screen');
+                updateCreateRoomUI();
+            });
+            document.getElementById('join-room-btn-main').addEventListener('click', () => {
+                playerName = mainPlayerNameInput.value.trim();
+                showScreen('join-room-screen');
+                updateJoinRoomUI();
+            });
+
+            // Create room screen buttons
+            document.getElementById('create-room-action-btn').addEventListener('click', handleCreateRoom);
+            document.getElementById('back-to-main-btn-create').addEventListener('click', () => {
+                showScreen('main-screen');
+                updateMainUI();
+            });
+
+            // Join room screen buttons
+            document.getElementById('join-room-action-btn').addEventListener('click', handleJoinRoom);
+            document.getElementById('back-to-main-btn-join').addEventListener('click', () => {
+                showScreen('main-screen');
+                updateMainUI();
+            });
+
+            // Game room buttons
+            startGameBtn.addEventListener('click', handleStartGame);
+            changeImagesBtn.addEventListener('click', handleChangeImages);
+            guessBtn.addEventListener('click', () => {
+                showGuessInput = true;
+                updateGameUI();
+            });
+            endGameBtn.addEventListener('click', handleEndGame);
+            leaveRoomBtn.addEventListener('click', handleLeaveRoom);
+
+            // Guess input actions
+            confirmGuessBtn.addEventListener('click', handleGuess);
+            cancelGuessBtn.addEventListener('click', () => {
+                showGuessInput = false;
+                guessTextInput.value = '';
+                updateGameUI();
+            });
+
+            // Message form
+            messageForm.addEventListener('submit', handleSendMessage);
+        });
+    </script>
+</body>
+</html>
